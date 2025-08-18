@@ -27,7 +27,7 @@ if os.path.exists(CONFIG_FILE):
 else:
     mapping = default_mapping.copy()
 
-# ساخت مپ معکوس (فارسی→انگلیسی)
+# مپ معکوس فارسی→انگلیسی
 reverse_mapping = {v: k for k, v in mapping.items()}
 
 def save_mapping():
@@ -35,32 +35,46 @@ def save_mapping():
         json.dump(mapping, f, ensure_ascii=False, indent=2)
 
 def detect_language(text):
-    persian_chars = len(re.findall(r'[آ-یءۀیۀچپژگ]', text))
+    persian_chars = len(re.findall(r'[آ-یءۀچپژگ]', text))
     english_chars = len(re.findall(r'[a-zA-Z]', text))
     return 'fa' if persian_chars > english_chars else 'en'
+
+def is_finglish(text):
+    # متن فقط با حروف انگلیسی و فاصله و علائم ساده باشد
+    return bool(re.fullmatch(r"[a-zA-Z0-9\s.,!?'\-:;]*", text))
+
+def perform_conversion(text):
+    lang = detect_language(text)
+    if lang == 'en':
+        if is_finglish(text):
+            status_var.set("⚠️ متن قاطی نیست، فینگلیش است.")
+        converted = ''.join(mapping.get(ch, ch) for ch in text)
+    else:
+        converted = ''.join(reverse_mapping.get(ch, ch) for ch in text)
+    return converted
 
 def convert_text():
     text = input_box.get("1.0", tk.END).rstrip("
 ")
-
-    # تشخیص زبان ورودی
-    lang = detect_language(text)
-    if lang == 'en':
-        converted = ''.join(mapping.get(ch, ch) for ch in text)  # EN → FA
-    else:
-        converted = ''.join(reverse_mapping.get(ch, ch) for ch in text)  # FA → EN
-
+    converted = perform_conversion(text)
     output_box.delete("1.0", tk.END)
     output_box.insert("1.0", converted)
     pyperclip.copy(converted)
-    status_var.set("✅ متن تبدیل و در کلیپ‌بورد کپی شد.")
+    status_var.set(status_var.get() + " ✅ متن تبدیل و در کلیپ‌بورد کپی شد.")
 
 def paste_clipboard():
     try:
         text = pyperclip.paste()
         input_box.delete("1.0", tk.END)
         input_box.insert("1.0", text)
-        status_var.set("📋 متن از کلیپ‌بورد اضافه شد.")
+        converted = perform_conversion(text)
+        output_box.delete("1.0", tk.END)
+        output_box.insert("1.0", converted)
+        pyperclip.copy(converted)
+        if not status_var.get():
+            status_var.set("📋 متن از کلیپ‌بورد اضافه و تبدیل شد.")
+        else:
+            status_var.set(status_var.get() + " 📋 Paste و تبدیل انجام شد.")
     except:
         status_var.set("❌ خطا در خواندن کلیپ‌بورد")
 
@@ -79,7 +93,7 @@ def edit_mapping():
     mapping[key] = val
     save_mapping()
     global reverse_mapping
-    reverse_mapping = {v: k for k, v in mapping.items()}  # آپدیت مپ معکوس
+    reverse_mapping = {v: k for k, v in mapping.items()}
     messagebox.showinfo("ذخیره شد", f"برای '{key}' معادل '{val}' ذخیره شد.")
 
 def make_context_menu(widget):
@@ -93,19 +107,10 @@ def make_context_menu(widget):
 
 # رابط کاربری
 root = tk.Tk()
-root.title("تبدیل کیبورد دوطرفه - پرتابل (ایده از مصطفی رئوفی و GapGPT)")
+root.title("تبدیل کیبورد دوطرفه با تشخیص فینگلیش - پرتابل (ایده از مصطفی رئوفی و GapGPT)")
 
 frame = tk.Frame(root, padx=10, pady=10)
 frame.pack(fill=tk.BOTH, expand=True)
 
-tk.Label(frame, text="ورودی:").grid(row=0, column=0, sticky="w")
-input_box = tk.Text(frame, height=5, width=60, undo=True)
-input_box.grid(row=1, column=0, columnspan=3, pady=5)
-make_contex_menu(input_box)
-
-tk.Label(frame, text="خروجی:").grid(row=2, column=0, sticky="w")
-output_box = tk.Text(frame, height=5, width=60, undo=True)
-output_box.grid(row=3, column=0, columnspan=3, pady=5)
-make_context_menu(output_box)
-
-tk.Button(frame, text="📋
+tk.Label(frame, text="ورودی:").grid(row=0, colum, sticky="w")
+input_box = tk.Text(frame, height=5, width
