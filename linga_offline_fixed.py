@@ -82,7 +82,7 @@ def on_save_map():
     save_map(keyboard_map)
 
 root = tk.Tk()
-root.title("تبدیل کیبورد فارسی–QWERTY (ایده از مصطفی رئوفی و GapGPT)")
+root.title("تبدیل کیبورد فارسی–QWERTY (ایده از مصطفی رئوفی  )")
 
 input_box = tk.Text(root, width=50, height=10, wrap=tk.WORD)
 output_box = tk.Text(root, width=50, height=10, wrap=tk.WORD)
