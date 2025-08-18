@@ -59,8 +59,7 @@ def load_text():
             pass
 
 def on_convert():
-    text = input_box.get("1.0", tk.END).rstrip("
-")  # ← این خط اصلاح شده
+    text = input_box.get("1.0", tk.END).rstrip("\n")
     converted = convert_text(text)
     output_box.delete("1.0", tk.END)
     output_box.insert(tk.END, converted)
@@ -99,4 +98,8 @@ input_box.grid(row=0, column=0, columnspan=3, padx=5, pady=5)
 output_box.grid(row=1, column=0, columnspan=3, padx=5, pady=5)
 btn_convert.grid(row=2, column=0, padx=5, pady=5, sticky="ew")
 btn_clear.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
-btn_save_map.grid
+btn_save_map.grid(row=2, column=2, padx=5, pady=5, sticky="ew")
+
+load_text()
+
+root.mainloop()
