@@ -54,8 +54,7 @@ def perform_conversion(text):
     return converted
 
 def convert_text():
-    text = input_box.get("1.0", tk.END).rstrip("
-")
+    text = input_box.get("1.0", tk.END).rstrip("\n")
     converted = perform_conversion(text)
     output_box.delete("1.0", tk.END)
     output_box.insert("1.0", converted)
