@@ -1,11 +1,7 @@
-name: Build EXE
+name: Build Portable EXE
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'linga_offline_fixed.py'
-      - '.github/workflows/build-exe.yml'
 
 jobs:
   build:
@@ -22,15 +18,22 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install pyinstaller pyperclip
+
+      - name: Download UPX (compressor)
+        run: |
+          curl -L https://github.com/upx/upx/releases/download/v4.2.4/upx-4.2.4-win64.zip -o upx.zip
+          tar -xf upx.zip
+          mkdir upx_dir
+          move upx-4.2.4-win64\upx.exe upx_dir\upx.exe
 
       - name: Build EXE
         run: |
-          pyinstaller --name "linga_offline" --onefile --noconsole linga_offline_fixed.py
+          pyinstaller --onefile --noconsole --clean --strip --upx-dir=upx_dir linga_offline_fixed.py
 
-      - name: Upload EXE Artifact
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linga_offline_exe
-          path: dist/linga_offline.exe
+          name: Linga-Portable
+          path: dist/*.exe
