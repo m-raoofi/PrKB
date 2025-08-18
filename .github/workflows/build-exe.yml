@@ -15,8 +15,8 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install PyInstaller
-        run: pip install pyinstaller
+      - name: Install dependencies
+        run: pip install pyinstaller pyperclip
 
       - name: Build EXE
         run: pyinstaller --onefile --noconsole linga_offline_fixed.py
