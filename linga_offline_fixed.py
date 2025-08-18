@@ -42,10 +42,13 @@ def convert_text():
 
 # خواندن از کلیپ‌بورد
 def paste_clipboard():
-    text = pyperclip.paste()
-    input_box.delete("1.0", tk.END)
-    input_box.insert("1.0", text)
-    status_var.set("📋 متن از کلیپ‌بورد اضافه شد.")
+    try:
+        text = pyperclip.paste()
+        input_box.delete("1.0", tk.END)
+        input_box.insert("1.0", text)
+        status_var.set("📋 متن از کلیپ‌بورد اضافه شد.")
+    except:
+        status_var.set("❌ خطا در خواندن کلیپ‌بورد")
 
 # پاک‌کردن جعبه‌های متن
 def clear_text():
@@ -65,20 +68,33 @@ def edit_mapping():
     save_mapping()
     messagebox.showinfo("ذخیره شد", f"برای '{key}' معادل '{val}' ذخیره شد.")
 
+# منوی راست‌کلیک عمومی برای TextBoxها
+def make_context_menu(widget):
+    menu = tk.Menu(widget, tearoff=0)
+    menu.add_command(label="کپی", command=lambda: widget.event_generate("<<Copy>>"))
+    menu.add_command(label="پیست", command=lambda: widget.event_generate("<<Paste>>"))
+    menu.add_command(label="انتخاب همه", command=lambda: widget.event_generate("<<SelectAll>>"))
+
+    def show_menu(event):
+        menu.tk_popup(event.x_root, event.y_root)
+    widget.bind("<Button-3>", show_menu)  # Right-click منو
+
 # ساخت رابط کاربری
 root = tk.Tk()
-root.title("تبدیل کیبورد فارسی - پرتابل")
+root.title("تبدیل کیبورد فارسی - پرتابل (ایده از مصطفی رئوفی)")
 
 frame = tk.Frame(root, padx=10, pady=10)
 frame.pack(fill=tk.BOTH, expand=True)
 
 tk.Label(frame, text="ورودی:").grid(row=0, column=0, sticky="w")
-input_box = tk.Text(frame, height=5, width=60)
+input_box = tk.Text(frame, height=5, width=60, undo=True)
 input_box.grid(row=1, column=0, columnspan=3, pady=5)
+make_context_menu(input_box)
 
 tk.Label(frame, text="خروجی:").grid(row=2, column=0, sticky="w")
-output_box = tk.Text(frame, height=5, width=60)
+output_box = tk.Text(frame, height=5, width=60, undo=True)
 output_box.grid(row=3, column=0, columnspan=3, pady=5)
+make_context_menu(output_box)
 
 tk.Button(frame, text="📋 Paste", command=paste_clipboard).grid(row=4, column=0, pady=5, sticky="ew")
 tk.Button(frame, text="🔄 تبدیل", command=convert_text).grid(row=4, column=1, pady=5, sticky="ew")
