@@ -2,27 +2,35 @@ name: Build EXE
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'linga_offline_fixed.py'
+      - '.github/workflows/build-exe.yml'
 
 jobs:
   build:
     runs-on: windows-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install pyinstaller pyperclip
+        run: |
+          pip install --upgrade pip
+          pip install pyinstaller pyperclip
 
       - name: Build EXE
-        run: pyinstaller --onefile --noconsole linga_offline_fixed.py
+        run: |
+          pyinstaller --name "linga_offline" --onefile --noconsole linga_offline_fixed.py
 
-      - name: Upload EXE artifact
+      - name: Upload EXE Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linga_offline_fixed_exe
-          path: dist/linga_offline_fixed.exe
+          name: linga_offline_exe
+          path: dist/linga_offline.exe
