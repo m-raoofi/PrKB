@@ -3,15 +3,9 @@ import pyperclip
 import json
 import os
 
-# --------------------------
-# مسیر فایل‌ها
-# --------------------------
 SAVE_FILE = "saved_text.json"
 MAP_FILE = "keyboard_map.json"
 
-# --------------------------
-# مپ پیش‌فرض کیبورد
-# --------------------------
 default_map = {
     'q': 'ض', 'w': 'ص', 'e': 'ث', 'r': 'ق', 't': 'ف', 'y': 'غ', 'u': 'ع', 'i': 'ه', 'o': 'خ', 'p': 'ح',
     'a': 'ش', 's': 'س', 'd': 'ی', 'f': 'ب', 'g': 'ل', 'h': 'ا', 'j': 'ت', 'k': 'ن', 'l': 'م',
@@ -21,9 +15,6 @@ default_map = {
     'Z': 'ك', 'X': 'ٓ', 'C': 'ژ', 'V': 'ٔ', 'B': 'ء', 'N': '‌', 'M': 'ء'
 }
 
-# --------------------------
-# لود یا ذخیره مپ
-# --------------------------
 def load_map():
     if os.path.exists(MAP_FILE):
         try:
@@ -43,18 +34,12 @@ def save_map(current_map):
 keyboard_map = load_map()
 reverse_map = {v: k for k, v in keyboard_map.items()}
 
-# --------------------------
-# توابع نگاشت
-# --------------------------
 def convert_text(text):
     if sum(ch in keyboard_map for ch in text) >= sum(ch in reverse_map for ch in text):
         return ''.join(keyboard_map.get(ch, ch) for ch in text)
     else:
         return ''.join(reverse_map.get(ch, ch) for ch in text)
 
-# --------------------------
-# توابع ذخیره/لود متن
-# --------------------------
 def save_text(text):
     try:
         with open(SAVE_FILE, "w", encoding="utf-8") as f:
@@ -73,12 +58,9 @@ def load_text():
         except Exception:
             pass
 
-# --------------------------
-# رویدادها و دکمه‌ها
-# --------------------------
 def on_convert():
     text = input_box.get("1.0", tk.END).rstrip("
-")
+")  # ← این خط اصلاح شده
     converted = convert_text(text)
     output_box.delete("1.0", tk.END)
     output_box.insert(tk.END, converted)
@@ -100,16 +82,12 @@ def on_paste(event=None):
 def on_save_map():
     save_map(keyboard_map)
 
-# --------------------------
-# رابط کاربری
-# --------------------------
 root = tk.Tk()
 root.title("تبدیل کیبورد فارسی–QWERTY (ایده از مصطفی رئوفی و GapGPT)")
 
 input_box = tk.Text(root, width=50, height=10, wrap=tk.WORD)
 output_box = tk.Text(root, width=50, height=10, wrap=tk.WORD)
 
-# پشتیبانی Paste با ماوس و Ctrl+V
 input_box.bind("<Control-v>", on_paste)
 input_box.bind("<Button-3>", lambda e: on_paste())
 
@@ -119,4 +97,6 @@ btn_save_map = tk.Button(root, text="ذخیره مپ کیبورد", command=on_s
 
 input_box.grid(row=0, column=0, columnspan=3, padx=5, pady=5)
 output_box.grid(row=1, column=0, columnspan=3, padx=5, pady=5)
-btn_convert.grid(row=2, column=0,
+btn_convert.grid(row=2, column=0, padx=5, pady=5, sticky="ew")
+btn_clear.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
+btn_save_map.grid
