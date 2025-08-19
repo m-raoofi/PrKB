@@ -1,96 +1,83 @@
-import py_compile
+# نسخهٔ نهایی دو زبانه با تشخیص خودکار و بدون SyntaxError
 
-code = r'''
 import tkinter as tk
-from tkinter import scrolledtext
 import json
 import os
 import pyperclip
 
-# نگاشت کیبورد انگلیسی به فارسی
-eng_to_fa = {
-    'a': 'ش', 'b': 'ذ', 'c': 'ز', 'd': 'ی', 'e': 'ث',
-    'f': 'ب', 'g': 'ل', 'h': 'ا', 'i': 'هـ', 'j': 'ت',
-    'k': 'ن', 'l': 'م', 'm': 'پ', 'n': 'د', 'o': 'خ',
-    'p': 'ح', 'q': 'ض', 'r': 'ق', 's': 'س', 't': 'ف',
-    'u': 'ع', 'v': 'ر', 'w': 'ص', 'x': 'ط', 'y': 'غ', 'z': 'ظ',
-    'A': 'ِ', 'B': 'ذ', 'C': 'ژ', 'D': 'ي', 'E': 'َ',
-    'F': 'ً', 'G': 'ُ', 'H': 'آ', 'I': '—', 'J': 'ة',
-    'K': '»', 'L': '«', 'M': 'ٱ', 'N': '،', 'O': ']',
-    'P': '[', 'Q': 'ْ', 'R': 'ٌ', 'S': 'ٍ', 'T': '؛',
-    'U': ']', 'V': 'ـ', 'W': '}', 'X': '{', 'Y': 'ى', 'Z': 'ؤ'
+# ---------- مپ کیبورد دوطرفه ----------
+key_map_en_to_fa = {
+    'q': 'ض', 'w': 'ص', 'e': 'ث', 'r': 'ق', 't': 'ف', 'y': 'غ', 'u': 'ع', 'i': 'ه', 'o': 'خ', 'p': 'ح',
+    'a': 'ش', 's': 'س', 'd': 'ی', 'f': 'ب', 'g': 'ل', 'h': 'ا', 'j': 'ت', 'k': 'ن', 'l': 'م',
+    'z': 'ئ', 'x': 'ء', 'c': 'ؤ', 'v': 'ر', 'b': 'لا', 'n': 'ى', 'm': 'و'
 }
 
-# برعکس‌سازی مپ برای فارسی به انگلیسی
-fa_to_eng = {v: k for k, v in eng_to_fa.items()}
+# مپ معکوس فارسی → انگلیسی
+key_map_fa_to_en = {v: k for k, v in key_map_en_to_fa.items()}
 
+# ---------- توابع تبدیل ----------
+
+def convert_english_to_persian(text):
+    return ''.join(key_map_en_to_fa.get(ch.lower(), ch) for ch in text)
+
+def convert_persian_to_english(text):
+    return ''.join(key_map_fa_to_en.get(ch, ch) for ch in text)
+
+# تشخیص خودکار زبان ورودی
+def detect_and_convert(text):
+    persian_count = sum('\u0600' <= ch <= '\u06FF' for ch in text)
+    latin_count = sum('a' <= ch.lower() <= 'z' for ch in text)
+    if persian_count > latin_count:
+        return convert_persian_to_english(text)
+    else:
+        return convert_english_to_persian(text)
+
+# ---------- مدیریت ذخیره/بارگذاری ----------
 SAVE_FILE = 'saved_text.json'
 
-def save_text(input_text, output_text):
+def save_text(content):
     with open(SAVE_FILE, 'w', encoding='utf-8') as f:
-        json.dump({'input': input_text, 'output': output_text}, f, ensure_ascii=False, indent=2)
+        json.dump({'text': content}, f, ensure_ascii=False, indent=2)
 
 def load_text():
     if os.path.exists(SAVE_FILE):
         with open(SAVE_FILE, 'r', encoding='utf-8') as f:
             data = json.load(f)
-            return data.get('input', ''), data.get('output', '')
-    return '', ''
+            return data.get('text', '')
+    return ''
 
-def convert_text(text):
-    # تشخیص خودکار زبان
-    if all(ch in eng_to_fa or not ch.isalpha() for ch in text):
-        return ''.join(eng_to_fa.get(ch, ch) for ch in text)
-    else:
-        return ''.join(fa_to_eng.get(ch, ch) for ch in text)
-
-def paste_clipboard():
-    try:
-        return pyperclip.paste().rstrip("\n")
-    except:
-        return ''
-
-# رابط کاربری
+# ---------- رابط کاربری ----------
 root = tk.Tk()
-root.title("Linga Offline AutoSave")
+root.title("تبدیل‌گر کیبورد دو زبانه")
 
-input_box = scrolledtext.ScrolledText(root, wrap=tk.WORD, width=40, height=10)
-output_box = scrolledtext.ScrolledText(root, wrap=tk.WORD, width=40, height=10)
+input_text = tk.Text(root, height=10, width=50)
+input_text.pack()
+output_text = tk.Text(root, height=10, width=50)
+output_text.pack()
 
-input_box.grid(row=0, column=0, padx=10, pady=10)
-output_box.grid(row=0, column=1, padx=10, pady=10)
+def do_convert():
+    txt = input_text.get("1.0", tk.END).rstrip("\n")
+    result = detect_and_convert(txt)
+    output_text.delete("1.0", tk.END)
+    output_text.insert(tk.END, result)
+    save_text(txt)
 
-def on_convert():
-    text = input_box.get("1.0", tk.END).rstrip("\n")
-    converted = convert_text(text)
-    output_box.delete("1.0", tk.END)
-    output_box.insert(tk.END, converted)
-    save_text(text, converted)
+def paste_and_convert():
+    try:
+        txt = pyperclip.paste()
+        input_text.delete("1.0", tk.END)
+        input_text.insert(tk.END, txt)
+        do_convert()
+    except:
+        pass
 
-def on_paste():
-    text = paste_clipboard()
-    input_box.delete("1.0", tk.END)
-    input_box.insert(tk.END, text)
-    on_convert()
+tk.Button(root, text="تبدیل", command=do_convert).pack()
+tk.Button(root, text="Paste + تبدیل", command=paste_and_convert).pack()
 
-convert_btn = tk.Button(root, text="تبدیل", command=on_convert)
-paste_btn = tk.Button(root, text="پیست", command=on_paste)
-
-convert_btn.grid(row=1, column=0, pady=5)
-paste_btn.grid(row=1, column=1, pady=5)
-
-# لود خودکار
-inp, outp = load_text()
-input_box.insert(tk.END, inp)
-output_box.insert(tk.END, outp)
+# لود خودکار متن قبلی
+prev = load_text()
+if prev:
+    input_text.insert(tk.END, prev)
+    do_convert()
 
 root.mainloop()
-'''
-
-file_path = '/mnt/data/linga_offline_autosave.py'
-with open(file_path, 'w', encoding='utf-8') as f:
-    f.write(code)
-
-# تست SyntaxError
-py_compile.compile(file_path, doraise=True)
-file_path
