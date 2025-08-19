@@ -8,32 +8,39 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pyinstaller pyperclip
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+        pip install upx --upgrade  # optional if using upx-packer
 
-      - name: Download UPX (compressor)
-        run: |
-          curl -L https://github.com/upx/upx/releases/download/v4.2.4/upx-4.2.4-win64.zip -o upx.zip
-          tar -xf upx.zip
-          mkdir upx_dir
-          move upx-4.2.4-win64\upx.exe upx_dir\upx.exe
+    - name: Build EXE with PyInstaller
+      run: |
+        pyinstaller linga_offline_autosave.py ^
+          --onefile ^
+          --noconsole ^
+          --clean ^
+          --strip ^
+          --collect-all tk ^
+          --collect-all tcl ^
+          --add-binary "$(python -c "import sys,os;print(os.path.join(os.path.dirname(sys.executable),'python311.dll'))");."
+          
+    - name: Compress EXE with UPX
+      run: |
+        curl -L https://github.com/upx/upx/releases/download/v4.2.3/upx-4.2.3-win64.zip -o upx.zip
+        tar -xf upx.zip
+        ./upx-4.2.3-win64/upx --best --lzma dist/linga_offline_autosave.exe
 
-      - name: Build EXE
-        run: |
-          pyinstaller --onefile --noconsole --clean --strip --upx-dir=upx_dir linga_offline_fixed.py
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Linga-Portable
-          path: dist/*.exe
+    - name: Upload EXE artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Linga-Portable
+        path: dist/linga_offline_autosave.exe
