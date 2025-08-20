@@ -6,6 +6,9 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: cmd  # اجرای همه دستورات در cmd.exe تا مشکل escape برطرف شه
 
     steps:
     - name: Checkout repository
@@ -23,18 +26,19 @@ jobs:
 
     - name: Build EXE with PyInstaller
       run: >
-        pyinstaller linga_offline_fixed.py --onefile --noconsole --clean --strip
+        pyinstaller linga_offline_fixed.py --name LingaPortable
+        --onefile --noconsole --clean --strip
         --collect-all tk --collect-all tcl
-        --add-binary "$(python -c "import sys,os;print(os.path.join(os.path.dirname(sys.executable),'python311.dll'))");."
+        --add-binary "%PythonLocation%\\python311.dll;."
 
     - name: Download and use UPX to compress EXE
       run: |
         curl -L https://github.com/upx/upx/releases/download/v4.2.3/upx-4.2.3-win64.zip -o upx.zip
         tar -xf upx.zip
-        ./upx-4.2.3-win64/upx --best --lzma dist/linga_offline_fixed.exe
+        .\upx-4.2.3-win64\upx --best --lzma dist\LingaPortable.exe
 
     - name: Upload EXE artifact
       uses: actions/upload-artifact@v4
       with:
         name: Linga-Portable
-        path: dist/linga_offline_fixed.exe
+        path: dist/LingaPortable.exe
